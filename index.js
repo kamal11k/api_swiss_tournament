@@ -19,15 +19,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
-let jwtOpts = {};
+var jwtOpts = {};
 jwtOpts.jwtFromRequest = ExtractJwt.fromAuthHeader();
 jwtOpts.secretOrKey = 'Kamal-Rabindra';
 
 //passport strategy for jwt
-let strategy = new JwtStrategy(jwtOpts, (jwt_payload, cb)=>{
-    let stmt = "select * from user where id = ?";
-    let id = jwt_payload.id;
-    connection.query(stmt, id, (error, result) => {
+var strategy = new JwtStrategy(jwtOpts, function(jwt_payload, cb) {
+    var stmt = "select * from user where id = ?";
+    var id = jwt_payload.id;
+    connection.query(stmt, id, function(error, result) {
         if(error){
             throw error;
         }
@@ -49,10 +49,10 @@ passport.use(strategy);
 app.use(passport.initialize());
 
 
-app.post('/login', (req, res)=>{
+app.post('/login', function(req, res) {
 
-    let email = req.body.email;
-    let password = req.body.password;
+    var email = req.body.email;
+    var password = req.body.password;
     if(!email){
         res.status(400).json('email required');
     }
@@ -61,7 +61,7 @@ app.post('/login', (req, res)=>{
     }
 
     var stmt = "SELECT * from user where email = ? ";
-    connection.query(stmt, [email], (error, results)=>{
+    connection.query(stmt, [email], function(error, results) {
         if(error){
             throw error;
         }
@@ -72,20 +72,23 @@ app.post('/login', (req, res)=>{
             res.status(400).json("Invalid password");
         }
         else{
-            let payload = {
+            var payload = {
                 email,
                 id: results[0].id,
             };
-            let token = jwt.sign(payload, jwtOpts.secretOrKey);
+            var token = jwt.sign(payload, jwtOpts.secretOrKey);
             res.status(200).json({message:"Success",token: token});
         }
     })
 
 })
 
-app.post('/signup',(req, res)=>{
+app.post('/signup',function(req, res) {
+    var email = req.body.email;
+    var password = req.body.password;
+    var name = req.body.name;
     var stmt = "SELECT * from user where email = ? ";
-     connection.query(stmt, [email], (error, results)=>{
+    connection.query(stmt, [email], function(error, results) {
         if(error){
             throw error;
         }
@@ -93,24 +96,21 @@ app.post('/signup',(req, res)=>{
             res.json("User already exists");
         }
         else{
-            var email = req.body.email;
-            var password = req.body.password;
-            var username = req.body.password;
-            var insertQuery = "INSERT INTO user ( username,password,email) values (?,?,?)";
-            connection.query(insertQuery,[username, password, email], (error, result)=>{
+            var stmt = "INSERT INTO user ( name,password,email) values (?,?,?)";
+            connection.query(stmt,[name, password, email], function(error, result) {
                 res.status(200).json("Successfully registered");
             })
         }
-     })
+    })
 })
 
-app.get('/', passport.authenticate('jwt', {session: false}), (req, res) => {
+app.get('/', passport.authenticate('jwt', {session: false}), function(req, res) {
     res.json("hello");
 })
 
 // app.use('/tournament',passport.authenticate('jwt', {session: false}), tour_route);
 
 // app.use('/player',passport.authenticate('jwt', {session: false}), player_route);
-app.listen(port, ()=>{
+app.listen(port, function() {
     console.log("local host is running");
 })
